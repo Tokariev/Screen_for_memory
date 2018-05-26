@@ -5,16 +5,16 @@ import ftplib
 import datetime
 import mysql.connector
 import socket
+import time
+import myconnutils
 
-DB_NAME = 'noprob01_img'
+
+
 now = datetime.datetime.now()
 
-
-
 def is_album(album_name, album_user_id):
-    cnx = mysql.connector.connect(host='noprob01.mysql.tools', database=DB_NAME, user='noprob01_img',
-                                  password='xbjz49r8')
-    cursor = cnx.cursor()
+    db_conn = myconnutils.getConnection()
+    cursor = db_conn.cursor()
 
     select_album_name = "SELECT album_name FROM chv_albums WHERE album_user_id ='" + str(album_user_id) + "' AND album_name ='" + album_name + "'"
 
@@ -22,7 +22,6 @@ def is_album(album_name, album_user_id):
     selected_album = cursor.fetchone()
 
     # Make sure data is committed to the database
-    cnx.commit()
     cursor.close()
     cnx.close()
 
@@ -32,9 +31,8 @@ def is_album(album_name, album_user_id):
         return True
 
 def get_album_id(album_name):
-    cnx = mysql.connector.connect(host='noprob01.mysql.tools', database=DB_NAME, user='noprob01_img',
-                                  password='xbjz49r8')
-    cursor = cnx.cursor()
+    db_conn = myconnutils.getConnection()
+    cursor = db_conn.cursor()
 
     select_album_id = "SELECT album_id FROM chv_albums WHERE album_name ='" + album_name + "'"
 
@@ -47,10 +45,9 @@ def get_album_id(album_name):
     return album_id
 
 def add_album_to_sql(album_name, user_id):
+    db_conn = myconnutils.getConnection()
+    cursor = db_conn.cursor()
 
-    cnx = mysql.connector.connect(host='noprob01.mysql.tools', database=DB_NAME, user='noprob01_img',
-                                  password='xbjz49r8')
-    cursor = cnx.cursor()
     insert_into_album = ("INSERT INTO chv_albums "
                          "(album_name, album_user_id, album_date, album_date_gmt, album_creation_ip, album_image_count) "
                          "VALUES (%s, %s, %s, %s, %s, %s)")
@@ -111,8 +108,6 @@ def get_id(email):
     cursor.execute(select_id)
     user_id = cursor.fetchone()[0]
 
-    # Make sure data is committed to the database
-    cnx.commit()
     cursor.close()
     cnx.close()
     return user_id
@@ -189,5 +184,12 @@ def upload(filetoupload):
     ftp.quit()
 
 
-make_screen()
+#make_screen()
 #add_album_in_sql("sdsds", 1)
+
+i = 1
+while True:
+    make_screen()
+    print(i)
+    time.sleep(30)  # Delay for 1 minute (60 seconds).
+    i += 1
