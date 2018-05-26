@@ -3,14 +3,12 @@ import os, sys
 import pyscreenshot as ImageGrab
 import ftplib
 import datetime
-import mysql.connector
 import socket
 import time
 import myconnutils
 
-
-
 now = datetime.datetime.now()
+
 
 def is_album(album_name, album_user_id):
     db_conn = myconnutils.getConnection()
@@ -20,10 +18,7 @@ def is_album(album_name, album_user_id):
 
     cursor.execute(select_album_name)
     selected_album = cursor.fetchone()
-
-    # Make sure data is committed to the database
-    cursor.close()
-    cnx.close()
+    db_conn.close()
 
     if selected_album == None:
         return False
@@ -33,21 +28,16 @@ def is_album(album_name, album_user_id):
 def get_album_id(album_name):
     db_conn = myconnutils.getConnection()
     cursor = db_conn.cursor()
-
     select_album_id = "SELECT album_id FROM chv_albums WHERE album_name ='" + album_name + "'"
 
     cursor.execute(select_album_id)
     album_id = cursor.fetchone()[0]
-
-    cursor.close()
-    cnx.close()
-
+    db_conn.close()
     return album_id
 
 def add_album_to_sql(album_name, user_id):
     db_conn = myconnutils.getConnection()
     cursor = db_conn.cursor()
-
     insert_into_album = ("INSERT INTO chv_albums "
                          "(album_name, album_user_id, album_date, album_date_gmt, album_creation_ip, album_image_count) "
                          "VALUES (%s, %s, %s, %s, %s, %s)")
@@ -64,12 +54,11 @@ def add_album_to_sql(album_name, user_id):
     # Insert into chv_albums
     cursor.execute(insert_into_album, data_album)
     # Make sure data is committed to the database
-    cnx.commit()
-    cursor.close()
-    cnx.close()
-
+    db_conn.commit()
+    db_conn.close()
 
 def add_img_to_sql(imGrab, image_name, user_id, album_id):
+
 
     image_extension = image_name.split(".")[-1]
     image_size = os.stat(image_name).st_size
@@ -83,9 +72,8 @@ def add_img_to_sql(imGrab, image_name, user_id, album_id):
     image_original_filename = image_name
     image_medium_size = os.stat(image_name.split(".")[0] + '.md.jpg').st_size
 
-    cnx = mysql.connector.connect(host='noprob01.mysql.tools', database=DB_NAME, user='noprob01_img',
-                                  password='xbjz49r8')
-    cursor = cnx.cursor()
+    db_conn = myconnutils.getConnection()
+    cursor = db_conn.cursor()
 
     insert_into_images = ("INSERT INTO chv_images(image_name, image_extension, image_size, image_width, image_height, image_date, image_date_gmt, image_title, image_user_id, image_album_id, image_uploader_ip, image_original_filename, image_medium_size) "
                           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
@@ -93,23 +81,17 @@ def add_img_to_sql(imGrab, image_name, user_id, album_id):
     data_img = (image_name.split(".")[0], image_extension, image_size, image_width, image_height, image_date, image_date_gmt, image_title, image_user_id, image_album_id, image_uploader_ip, image_original_filename, image_medium_size)
 
     cursor.execute(insert_into_images, data_img)
-
-    cnx.commit()
-    cursor.close()
-    cnx.close()
+    db_conn.close()
 
 def get_id(email):
-    cnx = mysql.connector.connect(host='noprob01.mysql.tools', database=DB_NAME, user='noprob01_img',
-                                  password='xbjz49r8')
-    cursor = cnx.cursor()
+    db_conn = myconnutils.getConnection()
+    cursor = db_conn.cursor()
 
     select_id = "SELECT user_id FROM chv_users WHERE user_email ='" + email + "'"
 
     cursor.execute(select_id)
     user_id = cursor.fetchone()[0]
-
-    cursor.close()
-    cnx.close()
+    db_conn.close()
     return user_id
 
 def make_screen():
@@ -187,9 +169,5 @@ def upload(filetoupload):
 #make_screen()
 #add_album_in_sql("sdsds", 1)
 
-i = 1
-while True:
-    make_screen()
-    print(i)
-    time.sleep(30)  # Delay for 1 minute (60 seconds).
-    i += 1
+
+make_screen()
